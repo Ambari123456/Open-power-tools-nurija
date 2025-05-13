@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Compressor Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: white;
+      color: #007BFF;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 500px;
+      padding: 2rem;
+      box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+      border-radius: 10px;
+      background-color: #f0f8ff;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 1rem auto;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: block;
+      margin: 1rem auto;
+    }
+
+    button:disabled {
+      background-color: #a0cfff;
+      cursor: not-allowed;
+    }
+
+    #download-link {
+      display: none;
+      text-align: center;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Compress Your PDF</h1>
+    <input type="file" id="pdfInput" accept="application/pdf" />
+    <button id="compressBtn" disabled>Compress PDF</button>
+    <div id="download-link">
+      <a id="downloadBtn" href="#" download="compressed.pdf">Download Compressed PDF</a>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script>
+    const pdfInput = document.getElementById('pdfInput');
+    const compressBtn = document.getElementById('compressBtn');
+    const downloadLink = document.getElementById('download-link');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let uploadedPdfBytes;
+
+    pdfInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file && file.type === 'application/pdf') {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          uploadedPdfBytes = new Uint8Array(e.target.result);
+          compressBtn.disabled = false;
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    });
+
+    compressBtn.addEventListener('click', async () => {
+      if (!uploadedPdfBytes) return;
+
+      const pdfDoc = await PDFLib.PDFDocument.load(uploadedPdfBytes);
+      const newPdf = await PDFLib.PDFDocument.create();
+
+      const copiedPages = await newPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+      copiedPages.forEach((page) => {
+        // Reduce size slightly by scaling content
+        const scaleFactor = 0.95;
+        const { width, height } = page.getSize();
+        page.scaleContent(scaleFactor, scaleFactor);
+        newPdf.addPage(page);
+      });
+
+      const compressedPdfBytes = await newPdf.save();
+      const blob = new Blob([compressedPdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      downloadBtn.href = url;
+      downloadLink.style.display = 'block';
+    });
+  </script>
+</body>
+</html>
