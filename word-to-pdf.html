@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PDF to Word Converter</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #1e90ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      background-color: #f5faff;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(30, 144, 255, 0.2);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .custom-file-upload {
+      background-color: #1e90ff;
+      color: #fff;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
+    .btn-convert {
+      background-color: #1e90ff;
+      color: #fff;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    .btn-convert:disabled {
+      background-color: #a0cfff;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .btn-convert, .custom-file-upload {
+        font-size: 14px;
+        padding: 10px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PDF to Word Converter</h1>
+    <label class="custom-file-upload">
+      <input type="file" id="pdfFile" accept="application/pdf" />
+      Choose PDF File
+    </label>
+    <br />
+    <button class="btn-convert" id="convertBtn" disabled>Convert to Word</button>
+    <p class="status" id="statusText"></p>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('pdfFile');
+    const convertBtn = document.getElementById('convertBtn');
+    const statusText = document.getElementById('statusText');
+
+    fileInput.addEventListener('change', () => {
+      convertBtn.disabled = !fileInput.files.length;
+    });
+
+    convertBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      statusText.textContent = 'Converting... Please wait.';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('/convert', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) throw new Error('Conversion failed');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name.replace(/\.pdf$/, '.docx');
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        statusText.textContent = 'Conversion successful! Downloading file.';
+      } catch (error) {
+        statusText.textContent = 'Error: ' + error.message;
+      }
+    });
+  </script>
+</body>
+</html>
