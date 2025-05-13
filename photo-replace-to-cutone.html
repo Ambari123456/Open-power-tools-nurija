@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Photo to Cartoon Tool</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f8ff;
+      color: #003366;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background-color: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 153, 255, 0.2);
+      text-align: center;
+    }
+
+    h1 {
+      color: #0099ff;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      background-color: #0099ff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
+    .image-preview, .cartoon-preview {
+      margin-top: 15px;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .image-preview img, .cartoon-preview img {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+
+    .cartoon-preview img {
+      filter: contrast(1.2) saturate(2) brightness(1.1);
+      /* Fake cartoon effect for demo */
+    }
+
+    .button-group {
+      margin-top: 15px;
+    }
+
+    .btn {
+      background-color: #0099ff;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      margin: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #007acc;
+    }
+
+    @media (max-width: 500px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Photo to Cartoon</h1>
+    <label for="imageUpload" class="upload-label">Upload Photo</label>
+    <input type="file" id="imageUpload" accept="image/*" />
+    
+    <div class="image-preview" id="previewContainer" style="display:none;">
+      <h3>Original Image</h3>
+      <img id="previewImage" src="" alt="Uploaded Image" />
+    </div>
+
+    <div class="button-group" id="convertButton" style="display:none;">
+      <button class="btn" onclick="convertToCartoon()">Convert to Cartoon</button>
+    </div>
+
+    <div class="cartoon-preview" id="cartoonContainer" style="display:none;">
+      <h3>Cartoon Image</h3>
+      <img id="cartoonImage" src="" alt="Cartoon Image" />
+    </div>
+  </div>
+
+  <script>
+    const imageUpload = document.getElementById('imageUpload');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    const cartoonContainer = document.getElementById('cartoonContainer');
+    const cartoonImage = document.getElementById('cartoonImage');
+    const convertButton = document.getElementById('convertButton');
+
+    imageUpload.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          previewImage.src = e.target.result;
+          cartoonImage.src = e.target.result;
+          previewContainer.style.display = 'block';
+          convertButton.style.display = 'block';
+          cartoonContainer.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function convertToCartoon() {
+      cartoonContainer.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
