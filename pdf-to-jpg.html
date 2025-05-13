@@ -1,72 +1,135 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-<script>
-  async function convertPDF() {
-    const fileInput = document.getElementById('pdfInput');
-    const output = document.getElementById('output');
-    output.innerHTML = '';
-
-    if (!fileInput.files.length) {
-      alert('Please upload a PDF file.');
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF to JPG Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0faff;
+      color: #000;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
 
-    const file = fileInput.files[0];
-    const reader = new FileReader();
+    .container {
+      background-color: #ffffff;
+      border: 2px solid #00aaff;
+      border-radius: 10px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 15px rgba(0, 170, 255, 0.2);
+    }
 
-    reader.onload = async function () {
-      const typedArray = new Uint8Array(this.result);
-      const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
-      const page = await pdf.getPage(1);
+    h1 {
+      color: #00aaff;
+      text-align: center;
+    }
 
-      const scale = 1.5;
-      const viewport = page.getViewport({ scale });
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+    input[type="file"] {
+      width: 100%;
+      margin: 10px 0;
+    }
 
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport
+    button {
+      background-color: #00aaff;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #008fcc;
+    }
+
+    .output {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PDF to JPG</h1>
+    <input type="file" id="pdfInput" accept="application/pdf" />
+    <button onclick="convertPDF()">Convert to JPG</button>
+    <div class="output" id="output"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>
+    async function convertPDF() {
+      const fileInput = document.getElementById('pdfInput');
+      const output = document.getElementById('output');
+      output.innerHTML = '';
+
+      if (!fileInput.files.length) {
+        alert('Please upload a PDF file.');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = async function() {
+        const typedArray = new Uint8Array(this.result);
+        const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+        const page = await pdf.getPage(1);
+
+        const scale = 1.5;
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport
+        };
+
+        await page.render(renderContext).promise;
+
+        // Fix: Ensure canvas is converted and downloadable
+        canvas.toBlob(function(blob) {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'converted.jpg';
+            link.textContent = 'Download JPG';
+            link.style.display = 'block';
+            link.style.marginTop = '10px';
+            link.style.color = '#00aaff';
+            output.appendChild(link);
+          } else {
+            output.innerHTML = '<p>Conversion failed. Try a different file.</p>';
+          }
+        }, 'image/jpeg', 0.7);
       };
 
-      await page.render(renderContext).promise;
-
-      canvas.toBlob(function (blob) {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-
-          // Preview
-          const imgPreview = document.createElement('img');
-          imgPreview.src = url;
-          imgPreview.style.maxWidth = '100%';
-          imgPreview.style.marginTop = '15px';
-          output.appendChild(imgPreview);
-
-          // Create download link
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = 'converted.jpg';
-
-          // Auto-trigger download
-          link.click();
-
-          // Optional manual download link
-          const manualLink = document.createElement('a');
-          manualLink.href = url;
-          manualLink.download = 'converted.jpg';
-          manualLink.textContent = 'Download JPG manually';
-          manualLink.style.display = 'block';
-          manualLink.style.marginTop = '10px';
-          manualLink.style.color = '#00aaff';
-          output.appendChild(manualLink);
-
-        } else {
-          output.innerHTML = '<p>Conversion failed. Try a different file.</p>';
-        }
-      }, 'image/jpeg', 0.7);
-    };
-
-    reader.readAsArrayBuffer(file);
-  }
-</script>
+      reader.readAsArrayBuffer(file);
+    }
+  </script>
+</body>
+</html>
