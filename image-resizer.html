@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Resizer Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e6f2ff;
+      color: #003366;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 102, 204, 0.3);
+    }
+
+    h2 {
+      text-align: center;
+      color: #007bff;
+    }
+
+    input[type="file"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #007bff;
+      border-radius: 6px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .preview {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Image Resizer</h2>
+    <input type="file" id="upload" accept="image/*" />
+    <input type="number" id="width" placeholder="Width (px)" />
+    <input type="number" id="height" placeholder="Height (px)" />
+    <button onclick="resizeImage()">Resize Image</button>
+    <div class="preview">
+      <canvas id="canvas" style="display:none;"></canvas>
+      <a id="downloadLink" style="display:none;" download="resized-image.png">Download Resized Image</a>
+    </div>
+  </div>
+
+  <script>
+    let image = new Image();
+    let file;
+
+    document.getElementById('upload').addEventListener('change', function (e) {
+      file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        image.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function resizeImage() {
+      const width = parseInt(document.getElementById('width').value);
+      const height = parseInt(document.getElementById('height').value);
+
+      if (!width || !height || isNaN(width) || isNaN(height)) {
+        alert('Please enter valid width and height.');
+        return;
+      }
+
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, width, height);
+      canvas.style.display = 'block';
+
+      const dataURL = canvas.toDataURL('image/png');
+      const downloadLink = document.getElementById('downloadLink');
+      downloadLink.href = dataURL;
+      downloadLink.style.display = 'inline-block';
+      downloadLink.textContent = 'Download Resized Image';
+    }
+  </script>
+</body>
+</html>
