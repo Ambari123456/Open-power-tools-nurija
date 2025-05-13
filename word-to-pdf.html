@@ -70,13 +70,14 @@
 <body>
   <h1>Word to PDF Converter</h1>
   <div class="converter-container">
-    <input type="file" id="wordFile" accept=".doc,.docx" />
+    <input type="file" id="wordFile" accept=".docx" />
     <br />
     <button id="convertBtn" disabled>Convert to PDF</button>
     <a id="downloadLink" class="download-link" href="#" download="converted.pdf">Download PDF</a>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
   <script>
     const fileInput = document.getElementById("wordFile");
     const convertBtn = document.getElementById("convertBtn");
@@ -88,33 +89,40 @@
 
     convertBtn.addEventListener("click", async () => {
       const file = fileInput.files[0];
-
-      if (!file) return;
+      if (!file || !file.name.endsWith(".docx")) {
+        alert("Please upload a valid .docx file.");
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = async function (e) {
-        const content = new TextDecoder("utf-8").decode(e.target.result);
+        try {
+          const arrayBuffer = e.target.result;
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          const text = result.value.substring(0, 8000); // Limit to avoid overflow
 
-        const pdfDoc = await PDFLib.PDFDocument.create();
-        const page = pdfDoc.addPage();
-        const { width, height } = page.getSize();
+          const pdfDoc = await PDFLib.PDFDocument.create();
+          const page = pdfDoc.addPage();
+          const { width, height } = page.getSize();
 
-        const fontSize = 12;
-        const text = content.substring(0, 5000); // Simple truncation to limit long docs
-        page.drawText(text, {
-          x: 50,
-          y: height - 50,
-          size: fontSize,
-          maxWidth: width - 100,
-        });
+          const fontSize = 12;
+          page.drawText(text, {
+            x: 50,
+            y: height - 50,
+            size: fontSize,
+            maxWidth: width - 100,
+          });
 
-        const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([pdfBytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-        downloadLink.href = url;
-        downloadLink.style.display = "inline-block";
+          const pdfBytes = await pdfDoc.save();
+          const blob = new Blob([pdfBytes], { type: "application/pdf" });
+          const url = URL.createObjectURL(blob);
+
+          downloadLink.href = url;
+          downloadLink.style.display = "inline-block";
+        } catch (err) {
+          alert("Failed to convert file: " + err.message);
+        }
       };
-
       reader.readAsArrayBuffer(file);
     });
   </script>
