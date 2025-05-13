@@ -2,140 +2,120 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PDF to Word Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word to PDF Converter</title>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #ffffff;
-      color: #1e90ff;
+      background-color: #f0f8ff;
+      color: #000;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
       padding: 20px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 400px;
-      background-color: #f5faff;
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 0 10px rgba(30, 144, 255, 0.2);
-      text-align: center;
+      min-height: 100vh;
+      margin: 0;
     }
 
     h1 {
-      font-size: 24px;
-      margin-bottom: 20px;
+      color: #007bff;
+    }
+
+    .converter-container {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
     }
 
     input[type="file"] {
-      display: none;
+      margin: 20px 0;
     }
 
-    .custom-file-upload {
-      background-color: #1e90ff;
+    button {
+      background-color: #007bff;
       color: #fff;
-      padding: 12px 20px;
+      padding: 10px 20px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      display: inline-block;
-      margin-bottom: 20px;
-    }
-
-    .btn-convert {
-      background-color: #1e90ff;
-      color: #fff;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      width: 100%;
       font-size: 16px;
     }
 
-    .btn-convert:disabled {
-      background-color: #a0cfff;
+    button:disabled {
+      background-color: #ccc;
       cursor: not-allowed;
     }
 
-    .status {
+    .download-link {
+      display: none;
       margin-top: 20px;
-      font-size: 14px;
     }
 
-    @media (max-width: 480px) {
-      .container {
-        padding: 20px;
+    @media (max-width: 600px) {
+      .converter-container {
+        padding: 15px;
       }
 
-      h1 {
-        font-size: 20px;
-      }
-
-      .btn-convert, .custom-file-upload {
-        font-size: 14px;
-        padding: 10px 16px;
+      button {
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>PDF to Word Converter</h1>
-    <label class="custom-file-upload">
-      <input type="file" id="pdfFile" accept="application/pdf" />
-      Choose PDF File
-    </label>
+  <h1>Word to PDF Converter</h1>
+  <div class="converter-container">
+    <input type="file" id="wordFile" accept=".doc,.docx" />
     <br />
-    <button class="btn-convert" id="convertBtn" disabled>Convert to Word</button>
-    <p class="status" id="statusText"></p>
+    <button id="convertBtn" disabled>Convert to PDF</button>
+    <a id="downloadLink" class="download-link" href="#" download="converted.pdf">Download PDF</a>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
   <script>
-    const fileInput = document.getElementById('pdfFile');
-    const convertBtn = document.getElementById('convertBtn');
-    const statusText = document.getElementById('statusText');
+    const fileInput = document.getElementById("wordFile");
+    const convertBtn = document.getElementById("convertBtn");
+    const downloadLink = document.getElementById("downloadLink");
 
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener("change", () => {
       convertBtn.disabled = !fileInput.files.length;
     });
 
-    convertBtn.addEventListener('click', async () => {
+    convertBtn.addEventListener("click", async () => {
       const file = fileInput.files[0];
+
       if (!file) return;
 
-      statusText.textContent = 'Converting... Please wait.';
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+        const content = new TextDecoder("utf-8").decode(e.target.result);
 
-      const formData = new FormData();
-      formData.append('file', file);
+        const pdfDoc = await PDFLib.PDFDocument.create();
+        const page = pdfDoc.addPage();
+        const { width, height } = page.getSize();
 
-      try {
-        const response = await fetch('/convert', {
-          method: 'POST',
-          body: formData
+        const fontSize = 12;
+        const text = content.substring(0, 5000); // Simple truncation to limit long docs
+        page.drawText(text, {
+          x: 50,
+          y: height - 50,
+          size: fontSize,
+          maxWidth: width - 100,
         });
 
-        if (!response.ok) throw new Error('Conversion failed');
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        downloadLink.href = url;
+        downloadLink.style.display = "inline-block";
+      };
 
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.name.replace(/\.pdf$/, '.docx');
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-
-        statusText.textContent = 'Conversion successful! Downloading file.';
-      } catch (error) {
-        statusText.textContent = 'Error: ' + error.message;
-      }
+      reader.readAsArrayBuffer(file);
     });
   </script>
 </body>
