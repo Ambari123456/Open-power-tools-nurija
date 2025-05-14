@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document Converter</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      border: 2px solid #00aaff;
+      border-radius: 10px;
+      background-color: #f0faff;
+    }
+
+    h1 {
+      text-align: center;
+      color: #00aaff;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input[type="file"], select, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #00aaff;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #00aaff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #008ecc;
+    }
+
+    .download-link {
+      display: none;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .download-link a {
+      color: #00aaff;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Document Converter</h1>
+    <div class="form-group">
+      <label for="fileInput">Upload Document</label>
+      <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" />
+    </div>
+    <div class="form-group">
+      <label for="formatSelect">Convert to:</label>
+      <select id="formatSelect">
+        <option value="pdf">PDF</option>
+        <option value="docx">DOCX</option>
+        <option value="txt">TXT</option>
+        <option value="jpg">JPG</option>
+        <option value="png">PNG</option>
+        <option value="msword">MS WORD</option>
+      </select>
+    </div>
+    <button onclick="convertDocument()">Convert</button>
+    <div class="download-link" id="downloadLink">
+      <p>Download your converted file:</p>
+      <a id="downloadAnchor" href="#" download>Download File</a>
+    </div>
+  </div>
+
+  <script>
+    function convertDocument() {
+      const fileInput = document.getElementById('fileInput');
+      const format = document.getElementById('formatSelect').value;
+      const downloadLink = document.getElementById('downloadLink');
+      const downloadAnchor = document.getElementById('downloadAnchor');
+
+      if (!fileInput.files.length) {
+        alert('Please upload a document.');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const fileName = file.name.split('.')[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const content = e.target.result;
+        let blob;
+        let mimeType = 'text/plain';
+
+        switch (format) {
+          case 'txt':
+            mimeType = 'text/plain';
+            break;
+          case 'docx':
+          case 'msword':
+            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            break;
+          case 'pdf':
+            mimeType = 'application/pdf';
+            break;
+          case 'jpg':
+            mimeType = 'image/jpeg';
+            break;
+          case 'png':
+            mimeType = 'image/png';
+            break;
+        }
+
+        blob = new Blob([content], { type: mimeType });
+
+        const url = URL.createObjectURL(blob);
+        const extension = format === 'msword' ? 'docx' : format;
+        downloadAnchor.href = url;
+        downloadAnchor.download = `${fileName}.${extension}`;
+        downloadLink.style.display = 'block';
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+  </script>
+</body>
+</html>
