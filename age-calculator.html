@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Age Calculator</title>
+  <style>
+    :root {
+      --primary-color: #00aaff;
+      --background-color: #ffffff;
+      --text-color: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .calculator-container {
+      background: #f0faff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 170, 255, 0.2);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .result {
+      font-size: 1.1rem;
+      margin-top: 1rem;
+      text-align: center;
+      background: #e6f7ff;
+      padding: 1rem;
+      border-radius: 8px;
+      color: #0077aa;
+    }
+
+    @media (max-width: 500px) {
+      .calculator-container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container">
+    <h1>Age Calculator</h1>
+    <input type="date" id="birthdate" />
+    <div class="result" id="ageResult">Enter your birthdate to calculate your age.</div>
+  </div>
+
+  <script>
+    const birthdateInput = document.getElementById('birthdate');
+    const ageResult = document.getElementById('ageResult');
+
+    birthdateInput.addEventListener('input', () => {
+      const birthdate = new Date(birthdateInput.value);
+      const today = new Date();
+
+      if (isNaN(birthdate)) {
+        ageResult.textContent = 'Please enter a valid date.';
+        return;
+      }
+
+      let years = today.getFullYear() - birthdate.getFullYear();
+      let months = today.getMonth() - birthdate.getMonth();
+      let days = today.getDate() - birthdate.getDate();
+
+      if (days < 0) {
+        months--;
+        const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      ageResult.textContent = `You are ${years} year(s), ${months} month(s), and ${days} day(s) old.`;
+    });
+  </script>
+</body>
+</html>
