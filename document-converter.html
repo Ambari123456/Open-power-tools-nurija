@@ -3,73 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Document Converter</title>
+  <title>Document Converter Tool</title>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
       background-color: #ffffff;
-      color: #333;
-      padding: 20px;
+      color: #0033cc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #f0f8ff;
     }
 
     .container {
       max-width: 600px;
-      margin: auto;
+      width: 90%;
+      background-color: #ffffff;
       padding: 20px;
-      border: 2px solid #00aaff;
-      border-radius: 10px;
-      background-color: #f0faff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 51, 204, 0.2);
+      text-align: center;
     }
 
     h1 {
-      text-align: center;
-      color: #00aaff;
+      color: #0033cc;
+      margin-bottom: 20px;
     }
 
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    input[type="file"], select, button {
+    input[type="file"],
+    select,
+    button {
       width: 100%;
+      margin: 10px 0;
       padding: 10px;
-      border: 1px solid #00aaff;
-      border-radius: 5px;
-      box-sizing: border-box;
+      border: 2px solid #0033cc;
+      border-radius: 6px;
+      font-size: 1em;
     }
 
     button {
-      background-color: #00aaff;
+      background-color: #0033cc;
       color: white;
-      font-weight: bold;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #008ecc;
-    }
-
-    .download-link {
-      display: none;
-      margin-top: 15px;
-      text-align: center;
-    }
-
-    .download-link a {
-      color: #00aaff;
-      font-weight: bold;
-      text-decoration: none;
+      background-color: #0055ff;
     }
 
     @media (max-width: 600px) {
-      .container {
-        padding: 10px;
+      h1 {
+        font-size: 1.5em;
       }
     }
   </style>
@@ -77,75 +65,46 @@
 <body>
   <div class="container">
     <h1>Document Converter</h1>
-    <div class="form-group">
-      <label for="fileInput">Upload Document</label>
-      <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" />
-    </div>
-    <div class="form-group">
-      <label for="formatSelect">Convert to:</label>
-      <select id="formatSelect">
-        <option value="pdf">PDF</option>
-        <option value="docx">DOCX</option>
-        <option value="txt">TXT</option>
-        <option value="jpg">JPG</option>
-        <option value="png">PNG</option>
-        <option value="msword">MS WORD</option>
-      </select>
-    </div>
+    <input type="file" id="upload" accept=".pdf,.docx,.txt" />
+    <select id="format">
+      <option value="pdf">Convert to PDF</option>
+      <option value="docx">Convert to DOCX</option>
+      <option value="txt">Convert to TXT</option>
+    </select>
     <button onclick="convertDocument()">Convert</button>
-    <div class="download-link" id="downloadLink">
-      <p>Download your converted file:</p>
-      <a id="downloadAnchor" href="#" download>Download File</a>
-    </div>
+    <a id="downloadLink" style="display:none; margin-top: 15px;" download>Download Converted File</a>
   </div>
 
   <script>
     function convertDocument() {
-      const fileInput = document.getElementById('fileInput');
-      const format = document.getElementById('formatSelect').value;
-      const downloadLink = document.getElementById('downloadLink');
-      const downloadAnchor = document.getElementById('downloadAnchor');
+      const fileInput = document.getElementById('upload');
+      const format = document.getElementById('format').value;
+      const file = fileInput.files[0];
 
-      if (!fileInput.files.length) {
+      if (!file) {
         alert('Please upload a document.');
         return;
       }
 
-      const file = fileInput.files[0];
-      const fileName = file.name.split('.')[0];
       const reader = new FileReader();
-
-      reader.onload = function (e) {
-        const content = e.target.result;
+      reader.onload = function(e) {
+        let content = e.target.result;
         let blob;
-        let mimeType = 'text/plain';
 
-        switch (format) {
-          case 'txt':
-            mimeType = 'text/plain';
-            break;
-          case 'docx':
-          case 'msword':
-            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            break;
-          case 'pdf':
-            mimeType = 'application/pdf';
-            break;
-          case 'jpg':
-            mimeType = 'image/jpeg';
-            break;
-          case 'png':
-            mimeType = 'image/png';
-            break;
+        if (format === 'pdf') {
+          blob = new Blob([content], { type: 'application/pdf' });
+        } else if (format === 'docx') {
+          blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        } else {
+          blob = new Blob([content], { type: 'text/plain' });
         }
 
-        blob = new Blob([content], { type: mimeType });
-
         const url = URL.createObjectURL(blob);
-        const extension = format === 'msword' ? 'docx' : format;
-        downloadAnchor.href = url;
-        downloadAnchor.download = `${fileName}.${extension}`;
-        downloadLink.style.display = 'block';
+        const downloadLink = document.getElementById('downloadLink');
+        downloadLink.href = url;
+        downloadLink.download = `converted.${format}`;
+        downloadLink.style.display = 'inline-block';
+        downloadLink.textContent = 'Download Converted File';
       };
 
       reader.readAsArrayBuffer(file);
