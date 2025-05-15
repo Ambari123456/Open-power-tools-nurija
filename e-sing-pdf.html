@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Sign PDF Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: white;
+      color: #0033cc;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #0033cc;
+      color: white;
+      text-align: center;
+      padding: 1em;
+    }
+
+    .container {
+      padding: 1em;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .pdf-viewer {
+      border: 2px solid #0033cc;
+      width: 100%;
+      height: 500px;
+      overflow: auto;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+    }
+
+    .signature-tools {
+      margin-top: 1em;
+    }
+
+    .signature-area {
+      border: 2px dashed #0033cc;
+      padding: 1em;
+      background: #f0f8ff;
+    }
+
+    #signatureCanvas {
+      border: 1px solid #0033cc;
+      width: 100%;
+      height: 200px;
+    }
+
+    button {
+      background: #0033cc;
+      color: white;
+      border: none;
+      padding: 0.5em 1em;
+      margin: 0.5em 0;
+      cursor: pointer;
+    }
+
+    input[type="file"], input[type="text"] {
+      margin: 0.5em 0;
+    }
+
+    @media (max-width: 600px) {
+      .pdf-viewer {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>E-Sign PDF Tool</h1>
+  </header>
+
+  <div class="container">
+    <input type="file" id="pdfUpload" accept="application/pdf" />
+
+    <div class="pdf-viewer" id="pdfViewer"></div>
+
+    <div class="signature-tools">
+      <div class="signature-area">
+        <p>Draw Signature:</p>
+        <canvas id="signatureCanvas"></canvas>
+        <button onclick="clearSignature()">Clear</button>
+      </div>
+
+      <p>Or Type Signature:</p>
+      <input type="text" id="typedSignature" placeholder="Your Signature" />
+      <button onclick="useTypedSignature()">Use Typed</button>
+
+      <button onclick="addSignatureToPDF()">Place Signature</button>
+      <button onclick="downloadSignedPDF()">Download Signed PDF</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+  <script>
+    let pdfDoc = null;
+    let currentPage = 1;
+    let signatureImageData = null;
+    const canvas = document.getElementById("signatureCanvas");
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+
+    canvas.addEventListener("mousedown", () => drawing = true);
+    canvas.addEventListener("mouseup", () => drawing = false);
+    canvas.addEventListener("mouseout", () => drawing = false);
+    canvas.addEventListener("mousemove", draw);
+
+    function draw(e) {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#0033cc";
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function useTypedSignature() {
+      const text = document.getElementById("typedSignature").value;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "24px Arial";
+      ctx.fillStyle = "#0033cc";
+      ctx.fillText(text, 10, 100);
+    }
+
+    document.getElementById("pdfUpload").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const fileReader = new FileReader();
+      fileReader.onload = async function() {
+        const typedarray = new Uint8Array(this.result);
+        pdfDoc = await PDFLib.PDFDocument.load(typedarray);
+        renderPDF(typedarray);
+      };
+      fileReader.readAsArrayBuffer(file);
+    });
+
+    async function renderPDF(data) {
+      const loadingTask = pdfjsLib.getDocument({ data });
+      const pdf = await loadingTask.promise;
+      const page = await pdf.getPage(currentPage);
+      const viewport = page.getViewport({ scale: 1.5 });
+
+      const canvasEl = document.createElement("canvas");
+      const context = canvasEl.getContext("2d");
+      canvasEl.height = viewport.height;
+      canvasEl.width = viewport.width;
+
+      await page.render({ canvasContext: context, viewport }).promise;
+
+      const viewer = document.getElementById("pdfViewer");
+      viewer.innerHTML = "";
+      viewer.appendChild(canvasEl);
+    }
+
+    async function addSignatureToPDF() {
+      signatureImageData = canvas.toDataURL();
+      const imgBytes = await fetch(signatureImageData).then(res => res.arrayBuffer());
+      const signatureImage = await pdfDoc.embedPng(imgBytes);
+      const pages = pdfDoc.getPages();
+      const firstPage = pages[0];
+      const { width, height } = firstPage.getSize();
+
+      firstPage.drawImage(signatureImage, {
+        x: 50,
+        y: 100,
+        width: 150,
+        height: 75,
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      renderPDF(pdfBytes);
+    }
+
+    async function downloadSignedPDF() {
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "signed.pdf";
+      link.click();
+    }
+  </script>
+</body>
+</html>
