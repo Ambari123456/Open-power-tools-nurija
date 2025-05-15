@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UUID Generator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f8ff;
+      margin: 0;
+      padding: 20px;
+      color: #003366;
+    }
+
+    .uuid-generator {
+      max-width: 500px;
+      margin: 40px auto;
+      background: #ffffff;
+      border: 2px solid #1e90ff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(30, 144, 255, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      color: #1e90ff;
+      margin-bottom: 20px;
+    }
+
+    .uuid-display {
+      background-color: #e6f2ff;
+      padding: 15px;
+      border-radius: 10px;
+      word-break: break-all;
+      font-size: 1.1em;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    button {
+      flex: 1 1 40%;
+      background-color: #1e90ff;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0d6efd;
+    }
+
+    @media (max-width: 480px) {
+      button {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="uuid-generator">
+    <h2>UUID Generator</h2>
+    <div id="uuid" class="uuid-display">Press "Generate" to create a UUID</div>
+    <div class="btn-group">
+      <button onclick="generateUUID()">Generate</button>
+      <button onclick="copyUUID()">Copy</button>
+      <button onclick="clearUUID()">Clear</button>
+    </div>
+  </div>
+
+  <script>
+    function generateUUID() {
+      const uuid = crypto.randomUUID();
+      document.getElementById('uuid').textContent = uuid;
+    }
+
+    function copyUUID() {
+      const uuid = document.getElementById('uuid').textContent;
+      if (uuid && uuid !== "Press \"Generate\" to create a UUID") {
+        navigator.clipboard.writeText(uuid).then(() => {
+          alert("UUID copied to clipboard!");
+        });
+      }
+    }
+
+    function clearUUID() {
+      document.getElementById('uuid').textContent = "Press \"Generate\" to create a UUID";
+    }
+  </script>
+</body>
+</html>
