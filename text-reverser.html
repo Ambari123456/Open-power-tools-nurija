@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Reverse Tool</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #e6f2ff;
+      color: #003366;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #005bb5;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 8px;
+      border: 1px solid #b3d9ff;
+      margin-bottom: 15px;
+      resize: vertical;
+    }
+    select, button {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+      border: 1px solid #b3d9ff;
+      font-size: 1em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #0099ff;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background-color: #007acc;
+    }
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px;
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Text Reverse Tool</h2>
+    <textarea id="inputText" placeholder="Enter or paste your text here..."></textarea>
+
+    <select id="mode">
+      <option value="full">Reverse Entire Text</option>
+      <option value="word">Reverse Each Word</option>
+      <option value="line">Reverse Each Line</option>
+    </select>
+
+    <button onclick="reverseText()">Reverse</button>
+    <button onclick="clearText()">Clear</button>
+    <button onclick="copyOutput()">Copy Output</button>
+
+    <textarea id="outputText" readonly placeholder="Reversed text will appear here..."></textarea>
+  </div>
+
+  <script>
+    function reverseText() {
+      const input = document.getElementById('inputText').value;
+      const mode = document.getElementById('mode').value;
+      let output = '';
+
+      if (mode === 'full') {
+        output = input.split('').reverse().join('');
+      } else if (mode === 'word') {
+        output = input.split(/(\s+)/).map(word => {
+          return word.trim() ? word.split('').reverse().join('') : word;
+        }).join('');
+      } else if (mode === 'line') {
+        output = input.split('\n').map(line => line.split('').reverse().join('')).join('\n');
+      }
+
+      document.getElementById('outputText').value = output;
+    }
+
+    function clearText() {
+      document.getElementById('inputText').value = '';
+      document.getElementById('outputText').value = '';
+    }
+
+    function copyOutput() {
+      const output = document.getElementById('outputText');
+      output.select();
+      output.setSelectionRange(0, 99999); // For mobile
+      document.execCommand('copy');
+      alert('Output copied to clipboard!');
+    }
+  </script>
+</body>
+</html>
