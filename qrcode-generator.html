@@ -3,132 +3,152 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QR Code Generator</title>
+  <title>Barcode Generator</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       font-family: 'Inter', sans-serif;
-      background: #e6f4ff;
+    }
+
+    body {
+      margin: 0;
+      background-color: #f0f8ff;
       color: #003366;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
+      padding: 2rem;
     }
-    .container {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 6px 20px rgba(0, 51, 102, 0.1);
-      max-width: 400px;
-      width: 100%;
-    }
-    .container h1 {
-      text-align: center;
+
+    h1 {
       color: #007bff;
-      margin-bottom: 20px;
     }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
     input, select, button {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
+      padding: 0.75rem;
       border: 1px solid #ccc;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 1rem;
     }
+
     button {
-      background: #007bff;
+      background-color: #007bff;
       color: white;
-      font-weight: 600;
-      cursor: pointer;
       border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
     }
+
     button:hover {
-      background: #0056b3;
+      background-color: #0056b3;
     }
-    .qr-code {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-    }
+
     canvas {
-      margin-top: 10px;
+      display: block;
+      margin: 1.5rem auto;
+      max-width: 100%;
     }
-    .download-options {
+
+    .download-buttons {
       display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
     }
-    .download-options a {
-      text-decoration: none;
-      color: #007bff;
-      font-weight: 600;
-      text-align: center;
-    }
-    @media (max-width: 480px) {
+
+    @media (max-width: 500px) {
       .container {
-        padding: 16px;
+        padding: 1rem;
       }
     }
   </style>
 </head>
 <body>
+  <h1>Barcode Generator</h1>
   <div class="container">
-    <h1>QR Code Generator</h1>
-    <input type="text" id="qrText" placeholder="Enter text or URL" />
-    <select id="qrSize">
-      <option value="128">128x128</option>
-      <option value="256">256x256</option>
-      <option value="512">512x512</option>
-      <option value="720">720x720</option>
-      <option value="1280">1280x1280</option>
-    </select>
-    <select id="qrCorrection">
-      <option value="L">Low (L)</option>
-      <option value="M">Medium (M)</option>
-      <option value="Q">Quartile (Q)</option>
-      <option value="H">High (H)</option>
-    </select>
-    <button onclick="generateQRCode()">Generate QR Code</button>
-    <div class="qr-code" id="qrCodeContainer"></div>
-    <div class="download-options" id="downloadOptions"></div>
+    <div class="form-group">
+      <label for="barcodeInput">Text or Numbers</label>
+      <input type="text" id="barcodeInput" placeholder="Enter text or numbers" />
+    </div>
+
+    <div class="form-group">
+      <label for="barcodeType">Barcode Type</label>
+      <select id="barcodeType">
+        <option value="CODE128">Code 128</option>
+        <option value="EAN13">EAN-13</option>
+        <option value="UPC">UPC</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="barcodeColor">Color</label>
+      <input type="color" id="barcodeColor" value="#000000" />
+    </div>
+
+    <div class="form-group">
+      <label for="barcodeSize">Width (px)</label>
+      <input type="number" id="barcodeSize" min="100" max="1000" value="300" />
+    </div>
+
+    <button onclick="generateBarcode()">Generate Barcode</button>
+
+    <canvas id="barcodeCanvas"></canvas>
+
+    <div class="download-buttons">
+      <button onclick="downloadBarcode('png')">Download PNG</button>
+      <button onclick="downloadBarcode('jpeg')">Download JPEG</button>
+    </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script>
-    function generateQRCode() {
-      const text = document.getElementById("qrText").value;
-      const size = parseInt(document.getElementById("qrSize").value);
-      const correction = document.getElementById("qrCorrection").value;
-      const container = document.getElementById("qrCodeContainer");
-      const downloadContainer = document.getElementById("downloadOptions");
+    function generateBarcode() {
+      const input = document.getElementById('barcodeInput').value;
+      const type = document.getElementById('barcodeType').value;
+      const color = document.getElementById('barcodeColor').value;
+      const width = parseInt(document.getElementById('barcodeSize').value);
+      const canvas = document.getElementById('barcodeCanvas');
 
-      container.innerHTML = "";
-      downloadContainer.innerHTML = "";
-
-      if (!text) return;
-
-      const canvas = document.createElement("canvas");
-      QRCode.toCanvas(canvas, text, { errorCorrectionLevel: correction, width: size }, function (error) {
-        if (error) console.error(error);
-        container.appendChild(canvas);
-
-        const sizes = [128, 256, 512, 720, 1280];
-        sizes.forEach(s => {
-          const link = document.createElement("a");
-          link.textContent = `Download ${s}x${s}`;
-          QRCode.toDataURL(text, { errorCorrectionLevel: correction, width: s }, (err, url) => {
-            if (!err) {
-              link.href = url;
-              link.download = `qr-${s}.png`;
-              downloadContainer.appendChild(link);
-            }
-          });
-        });
+      JsBarcode(canvas, input, {
+        format: type,
+        lineColor: color,
+        width: 2,
+        height: 100,
+        displayValue: true,
+        fontSize: 16,
+        margin: 10
       });
+
+      canvas.style.width = width + 'px';
+    }
+
+    function downloadBarcode(format) {
+      const canvas = document.getElementById('barcodeCanvas');
+      const link = document.createElement('a');
+      link.download = `barcode.${format}`;
+      link.href = canvas.toDataURL(`image/${format}`);
+      link.click();
     }
   </script>
 </body>
