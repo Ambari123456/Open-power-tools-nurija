@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PDF Lock/Unlock Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background-color: #f0f8ff;
+      color: #003366;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #007BFF;
+      margin-bottom: 1rem;
+    }
+
+    input[type="file"], input[type="password"] {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+    }
+
+    button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      color: white;
+      background-color: #007BFF;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PDF Lock / Unlock</h1>
+    <input type="file" id="pdfFile" accept="application/pdf" />
+    <input type="password" id="password" placeholder="Enter Password (if needed)" />
+    <button onclick="lockPDF()">🔒 Lock PDF</button>
+    <button onclick="unlockPDF()">🔓 Unlock PDF</button>
+  </div>
+
+  <script>
+    async function lockPDF() {
+      const fileInput = document.getElementById('pdfFile');
+      const password = document.getElementById('password').value;
+
+      if (!fileInput.files.length || !password) {
+        alert('Please select a PDF file and enter a password.');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const uint8Array = new Uint8Array(await file.arrayBuffer());
+      const pdfDoc = await PDFLib.PDFDocument.load(uint8Array);
+
+      pdfDoc.encrypt({
+        ownerPassword: password,
+        userPassword: password,
+        permissions: {
+          printing: 'lowResolution',
+          modifying: false,
+          copying: false,
+        },
+      });
+
+      const lockedPdfBytes = await pdfDoc.save();
+      const blob = new Blob([lockedPdfBytes], { type: 'application/pdf' });
+      saveAs(blob, 'locked.pdf');
+    }
+
+    async function unlockPDF() {
+      const fileInput = document.getElementById('pdfFile');
+      const password = document.getElementById('password').value;
+
+      if (!fileInput.files.length) {
+        alert('Please select a PDF file.');
+        return;
+      }
+
+      try {
+        const file = fileInput.files[0];
+        const uint8Array = new Uint8Array(await file.arrayBuffer());
+
+        const pdfDoc = await PDFLib.PDFDocument.load(uint8Array, {
+          password: password || undefined
+        });
+
+        const unlockedPdfBytes = await pdfDoc.save();
+        const blob = new Blob([unlockedPdfBytes], { type: 'application/pdf' });
+        saveAs(blob, 'unlocked.pdf');
+      } catch (error) {
+        alert('Failed to unlock the PDF. Ensure the password is correct.');
+      }
+    }
+  </script>
+</body>
+</html>
